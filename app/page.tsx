@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import type { MatchChunk, RagApiResponse, UploadApiResponse } from "@/types/rag";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -11,7 +12,7 @@ export default function Home() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [answer, setAnswer] = useState("");
-  const [sources, setSources] = useState<any[]>([]);
+  const [sources, setSources] = useState<MatchChunk[]>([]);
   const [err, setErr] = useState("");
 
   const [file, setFile] = useState<File | null>(null);
@@ -28,12 +29,12 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, topK: 4, minScore: 0.0 }),
       });
-      const json = await r.json();
+      const json: RagApiResponse = await r.json();
       if (!r.ok) throw new Error(json.error || "Error");
       setAnswer(json.answer);
       setSources(json.sources || []);
-    } catch (e: any) {
-      setErr(e.message);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -66,11 +67,11 @@ export default function Home() {
       if (docId) fd.append("doc_id", docId);
 
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const json = await res.json();
+      const json: UploadApiResponse = await res.json();
       if (!res.ok) throw new Error(json.error || "Upload failed");
       setMsg(json.message || "Uploaded and ingested successfully.");
-    } catch (e: any) {
-      setMsg(`Error: ${e.message}`);
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Unknown error");
     } finally {
       setBusy(false);
     }

@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'; // avoid edge/static optimization
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
+import type { UploadApiResponse } from "@/types/rag";
 
 // CommonJS module — load via require in Node runtime
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -122,7 +123,7 @@ export async function POST(req: NextRequest) {
       inserted++;
     }
 
-    return NextResponse.json({
+    return NextResponse.json<UploadApiResponse>({
       ok: true,
       doc_id,
       title,
@@ -130,8 +131,12 @@ export async function POST(req: NextRequest) {
       inserted,
       message: `Ingested ${inserted}/${chunks.length} chunks from ${file.name}`,
     });
-  } catch (e: any) {
-    console.error("[/api/upload] error:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("[/api/upload] error:", msg);
+    return NextResponse.json<UploadApiResponse>(
+      { ok: false, doc_id: "", title: "", chunks: 0, inserted: 0, message: "", error: msg },
+      { status: 500 }
+    );
   }
 }

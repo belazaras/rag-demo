@@ -1,6 +1,11 @@
+// app/api/rag/route.ts
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import type { MatchChunk, RagApiRequest, RagApiResponse } from "@/types/rag";
 
 
 // Very simple rate limit: 10 requests / minute / IP
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
     });
     if (error) throw error;
 
-    const chunks = (data as any[]) ?? [];
+    const chunks = (data ?? []) as MatchChunk[];
     const topSim = chunks[0]?.similarity ?? 0;
 
     // If confidence too low, short-circuit safely
@@ -83,13 +88,17 @@ export async function POST(req: NextRequest) {
       temperature: 0.2,
     });
 
-    return NextResponse.json({
+    return NextResponse.json<RagApiResponse>({
       answer: res.choices[0].message?.content ?? "",
       sources: chunks,
       confidence: topSim,
     });
-  } catch (e: any) {
-    console.error("[/api/rag] error:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    console.error("[/api/rag] error:", msg);
+    return NextResponse.json<RagApiResponse>(
+      { answer: "", sources: [], confidence: 0, error: msg },
+      { status: 500 }
+    );
   }
 }
