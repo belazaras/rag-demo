@@ -1,103 +1,165 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+
+const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2 MB
+
+function formatBytes(b: number) {
+  return `${(b / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState<any[]>([]);
+  const [err, setErr] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState("");
+  const [docId, setDocId] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function ask() {
+    setLoading(true); setErr(""); setAnswer(""); setSources([]);
+    try {
+      const r = await fetch("/api/rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q, topK: 4, minScore: 0.0 }),
+      });
+      const json = await r.json();
+      if (!r.ok) throw new Error(json.error || "Error");
+      setAnswer(json.answer);
+      setSources(json.sources || []);
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function onPick(f?: File) {
+    setMsg("");
+    if (!f) { setFile(null); return; }
+    if (f.size > MAX_FILE_BYTES) {
+      setFile(null);
+      setMsg(`File too large: ${formatBytes(f.size)} (max ${formatBytes(MAX_FILE_BYTES)})`);
+      return;
+    }
+    setFile(f);
+  }
+
+  async function upload() {
+    setMsg("");
+    if (!file) { setMsg("Please choose a file."); return; }
+    if (file.size > MAX_FILE_BYTES) {
+      setMsg(`File too large: ${formatBytes(file.size)} (max ${formatBytes(MAX_FILE_BYTES)})`);
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (title) fd.append("title", title);
+      if (docId) fd.append("doc_id", docId);
+
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Upload failed");
+      setMsg(json.message || "Uploaded and ingested successfully.");
+    } catch (e: any) {
+      setMsg(`Error: ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className="mx-auto max-w-3xl p-6 space-y-4">
+      <h1 className="text-2xl font-semibold mb-4">RAG Demo</h1>
+      <div className="flex gap-2">
+        <input
+          className="flex-1 border rounded px-3 py-2"
+          placeholder="Ask a question…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <button onClick={ask} disabled={loading || !q}
+          className="px-4 py-2 rounded bg-black text-white disabled:opacity-50">
+          {loading ? "Thinking…" : "Ask"}
+        </button>
+      </div>
+
+      {err && <p className="text-red-600 mt-3">{err}</p>}
+
+      {answer && (
+        <section className="mt-6">
+          <h2 className="font-semibold">Answer</h2>
+          <pre className="whitespace-pre-wrap bg-gray-50 p-3 rounded mt-2">{answer}</pre>
+
+          {sources?.length > 0 && (
+            <>
+              <div className="text-sm text-gray-500 mt-2">
+                Confidence: {(sources[0]?.similarity ?? 0).toFixed(2)}
+              </div>
+              <h3 className="font-semibold mt-4">Sources</h3>
+              <ul className="space-y-2 mt-2">
+                {sources.map((s, i) => (
+                  <li key={i} className="text-sm">
+                    [{s.title}#{s.chunk_index}] {String(s.text).slice(0, 180)}…
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
+
+      <section className="border rounded p-4">
+        <h2 className="text-lg font-semibold mb-2">Upload & Re-ingest</h2>
+        <div className="grid gap-3">
+          <input
+            type="file"
+            accept=".txt,.md,.pdf"
+            onChange={(e) => onPick(e.target.files?.[0] || undefined)}
+          />
+
+          {file && (
+            <div className="text-sm text-gray-600">
+              Selected: <strong>{file.name}</strong> — {formatBytes(file.size)}
+            </div>
+          )}
+
+          <input
+            className="border rounded px-3 py-2"
+            placeholder="Optional title override"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <input
+            className="border rounded px-3 py-2"
+            placeholder="Optional doc_id (for filtering)"
+            value={docId}
+            onChange={(e) => setDocId(e.target.value)}
+          />
+
+          <button
+            className="px-4 py-2 rounded bg-black text-white disabled:opacity-50"
+            onClick={upload}
+            disabled={busy || !file}
+            title={file && file.size > MAX_FILE_BYTES ? "File too large" : undefined}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {busy ? "Uploading…" : "Upload & Ingest"}
+          </button>
+
+          {msg && <p className="text-sm">{msg}</p>}
+          <p className="text-xs text-gray-500">
+            Max file size: {formatBytes(MAX_FILE_BYTES)}. Supported: .txt, .md, .pdf
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </section>
+    </main>
   );
 }
