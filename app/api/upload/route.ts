@@ -8,7 +8,6 @@ import OpenAI from "openai";
 import type { UploadApiResponse } from "@/types/rag";
 
 // CommonJS module — load via require in Node runtime
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const pdfParse = (eval("require") as NodeRequire)("pdf-parse");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });

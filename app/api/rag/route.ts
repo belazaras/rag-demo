@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
-import type { MatchChunk, RagApiRequest, RagApiResponse } from "@/types/rag";
+import type { MatchChunk, RagApiResponse } from "@/types/rag";
 
 
 // Very simple rate limit: 10 requests / minute / IP
