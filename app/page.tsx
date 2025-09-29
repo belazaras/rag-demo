@@ -6,6 +6,8 @@ import type { MatchChunk, RagApiResponse, UploadApiResponse } from "@/types/rag"
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const fmtMB = (b: number) => `${(b / (1024 * 1024)).toFixed(2)} MB`;
 
+type Tone = "gray" | "green" | "red";
+
 function Badge({ children, tone = "gray" }: { children: React.ReactNode; tone?: "gray" | "green" | "red" }) {
   const tones: Record<string, string> = {
     gray: "bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-neutral-300",
@@ -99,7 +101,7 @@ export default function Home() {
   }
 
   const topSim = sources[0]?.similarity ?? 0;
-  const simTone = topSim >= 0.75 ? "green" : topSim >= 0.65 ? "gray" : "red";
+  const simTone: Tone = topSim >= 0.75 ? "green" : topSim >= 0.65 ? "gray" : "red";
 
   return (
     <main className="mx-auto max-w-4xl p-6 md:p-10 space-y-8">
@@ -145,7 +147,7 @@ export default function Home() {
               )}
             </button>
             {sources.length > 0 && (
-              <Badge tone={simTone as string}>Confidence: {topSim.toFixed(2)}</Badge>
+              <Badge tone={simTone}>Confidence: {topSim.toFixed(2)}</Badge>
             )}
             {answer && <CopyButton text={answer} />}
           </div>
