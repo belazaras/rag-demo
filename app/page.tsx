@@ -145,7 +145,7 @@ export default function Home() {
               )}
             </button>
             {sources.length > 0 && (
-              <Badge tone={simTone as any}>Confidence: {topSim.toFixed(2)}</Badge>
+              <Badge tone={simTone as string}>Confidence: {topSim.toFixed(2)}</Badge>
             )}
             {answer && <CopyButton text={answer} />}
           </div>
