@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 
+type Quote = { quote: string; start?: number; end?: number };
+
 type Episode = { id: string; title: string; created_at: string };
-type Summary = { summary_short?: string; summary_long?: string; topics?: string[]; quotes?: any[] };
+type Summary = { summary_short?: string; summary_long?: string; topics?: string[]; quotes?: Quote[] };
 type Posts = { linkedin: string; tweet_a: string; tweet_b: string };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -54,8 +56,8 @@ export default function Studio() {
       if (!r.ok) throw new Error(j.error || "Transcription failed");
       setMsg("Transcribed ✅");
       await fetchEpisodes();
-    } catch (e:any) {
-      setMsg(e.message);
+    } catch (e:unknown) {
+        setMsg(e instanceof Error ? e.message : "Unknown error");
     } finally { setBusy(false); }
   }
 

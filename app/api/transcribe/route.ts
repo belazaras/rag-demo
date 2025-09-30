@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
     if (trErr) throw trErr;
 
     return NextResponse.json({ ok: true, episode: ep, transcript: tr });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Transcription failed" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Transcription failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

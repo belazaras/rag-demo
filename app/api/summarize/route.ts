@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
     if (insErr) throw insErr;
 
     return NextResponse.json({ ok: true, summary });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Summarization failed" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Summarization failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -62,7 +62,8 @@ Return JSON:
     if (saveErr) throw saveErr;
 
     return NextResponse.json({ ok: true, posts: saved });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Social generation failed" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Social generation failed";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
