@@ -1,26 +1,56 @@
+/* Tailwind v4 – one-line import */
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* Theme tokens (fonts, colors, radius, shadows, etc.)
+   `inline` is important when mapping one var to another (e.g. next/font → font-sans) */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Use Inter (from next/font) for Tailwind's font-sans utility */
+  --font-sans: var(--font-inter);
+
+  /* Brand colors for utilities like text-accent-purple, bg-accent-blue, from-accent-purple, etc. */
+  --color-accent-purple: #8b5cf6; /* violet-500 */
+  --color-accent-blue: #3b82f6; /* blue-500 */
+
+  /* Optional: radius + shadow tokens for consistent polish */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* A soft dual-color glow you can apply via shadow-glow */
+  --shadow-glow:
+    0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Base page tweaks */
+html,
+body {
+  height: 100%;
+}
+
+/* Reusable helpers (live under @layer to participate nicely with Tailwind) */
+@layer utilities {
+  /* Gradient text (purple → blue) */
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-purple to-accent-blue bg-clip-text text-transparent;
+  }
+
+  /* Gradient background helper */
+  .gradient-bg {
+    @apply bg-gradient-to-r from-accent-purple to-accent-blue;
+  }
+
+  /* Hover glow for buttons/CTAs */
+  .button-glow {
+    transition: box-shadow 0.2s ease;
+  }
+  .button-glow:hover {
+    box-shadow: var(--shadow-glow);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Nice default transitions */
+* {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
