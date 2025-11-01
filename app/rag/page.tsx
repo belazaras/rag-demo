@@ -1,21 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { MatchChunk, RagApiResponse, UploadApiResponse } from "@/types/rag";
+import type {
+  MatchChunk,
+  RagApiResponse,
+  UploadApiResponse,
+} from "@/types/rag";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const fmtMB = (b: number) => `${(b / (1024 * 1024)).toFixed(2)} MB`;
-
-type Tone = "gray" | "green" | "red";
-
-function Badge({ children, tone = "gray" }: { children: React.ReactNode; tone?: "gray" | "green" | "red" }) {
-  const tones: Record<string, string> = {
-    gray: "bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-neutral-300",
-    green: "bg-green-100 text-green-700 dark:bg-emerald-900/50 dark:text-emerald-300",
-    red: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-  };
-  return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>;
-}
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -26,7 +19,10 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}
-      className="text-xs rounded border px-2 py-1 hover:bg-gray-50 dark:hover:bg-neutral-800"
+      className="text-xs relative inline-flex items-center justify-center rounded-xl px-3 py-2 font-medium text-white 
+bg-black border border-transparent 
+[background:linear-gradient(#0B0B0C,#0B0B0C)_padding-box,linear-gradient(to_right,var(--color-accent-purple),var(--color-accent-blue))_border-box]
+hover:opacity-90 transition hover:shadow-[0_0_12px_rgba(139,92,246,0.25)]"
       title="Copy to clipboard"
     >
       {copied ? "Copied!" : "Copy"}
@@ -83,7 +79,10 @@ export default function Home() {
   async function upload() {
     setMsg("");
     if (!file) return setMsg("Please choose a file.");
-    if (file.size > MAX_FILE_BYTES) return setMsg(`File too large: ${fmtMB(file.size)} (max ${fmtMB(MAX_FILE_BYTES)})`);
+    if (file.size > MAX_FILE_BYTES)
+      return setMsg(
+        `File too large: ${fmtMB(file.size)} (max ${fmtMB(MAX_FILE_BYTES)})`,
+      );
 
     const fd = new FormData();
     fd.append("file", file);
@@ -101,78 +100,109 @@ export default function Home() {
   }
 
   const topSim = sources[0]?.similarity ?? 0;
-  const simTone: Tone = topSim >= 0.75 ? "green" : topSim >= 0.65 ? "gray" : "red";
 
   return (
-    <main className="mx-auto max-w-4xl p-6 md:p-10 space-y-8">
+    <main className="relative mx-auto max-w-4xl px-4 py-10 md:px-6 md:py-12 space-y-10">
+      {/* Background accent */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-20 left-1/2 h-[620px] w-[620px] -translate-x-1/2 rounded-full blur-[120px] opacity-10 gradient-bg" />
+      </div>
+
       {/* Header */}
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">RAG Studio</h1>
-          <p className="text-sm text-gray-600 dark:text-neutral-400">
-            Upload documents, ask questions, and get grounded answers with cited sources.
+      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-1.5">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            <span className="gradient-text">RAG Studio</span>
+          </h1>
+          <p className="text-white/70">
+            Upload documents, ask questions, and get grounded answers with cited
+            sources.
           </p>
         </div>
-        <div className="hidden md:flex items-center gap-2">
-          <Badge>pgvector</Badge>
-          <Badge>Next.js</Badge>
-          <Badge>OpenAI</Badge>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+            pgvector
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+            Next.js
+          </span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+            OpenAI
+          </span>
         </div>
       </header>
 
       {/* Ask Card */}
-      <section className="rounded-2xl border bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-5 md:p-6 shadow-[0_0_40px_rgba(0,0,0,0.15)]">
         <h2 className="text-lg font-medium mb-3">Ask a question</h2>
+
         <div className="space-y-3">
           <textarea
-            className="w-full resize-y rounded-lg border px-3 py-2 leading-relaxed outline-none focus:ring-2 focus:ring-black/10 dark:border-neutral-800 dark:bg-neutral-900"
+            className="w-full resize-y rounded-xl border border-white/10 bg-white/5 px-4 py-3 leading-relaxed outline-none focus:ring-2 focus:ring-white/20 placeholder:text-white/40"
             rows={4}
-            placeholder="e.g., What advantages does Shopify offer in these docs?"
+            placeholder="e.g., Why was HMS Belfast important in WW2?"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
-          <div className="flex items-center gap-3">
+
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={ask}
               disabled={loading || !q}
-              className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50 dark:bg-white dark:text-black"
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-3 font-medium text-white button-glow
+                     disabled:opacity-50 bg-gradient-to-r from-accent-purple to-accent-blue"
             >
               {loading ? (
                 <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent dark:border-black/60 dark:border-t-transparent" />{" "}
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
                   Thinking…
                 </>
               ) : (
                 "Ask"
               )}
             </button>
+
             {sources.length > 0 && (
-              <Badge tone={simTone}>Confidence: {topSim.toFixed(2)}</Badge>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+                Confidence: {topSim.toFixed(2)}
+              </span>
             )}
+
             {answer && <CopyButton text={answer} />}
           </div>
         </div>
 
         {/* Answer */}
         {answer && (
-          <div className="mt-5 rounded-xl border bg-gray-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-medium">Answer</h3>
             </div>
-            <div className="whitespace-pre-wrap leading-relaxed">{answer}</div>
+            <div className="whitespace-pre-wrap leading-relaxed text-white/90">
+              {answer}
+            </div>
 
             {/* Sources */}
             {sources?.length > 0 && (
               <div className="mt-4">
-                <h4 className="mb-2 text-sm font-medium text-gray-700 dark:text-neutral-300">Sources</h4>
+                <h4 className="mb-2 text-sm font-medium text-white/80">
+                  Sources
+                </h4>
                 <ul className="space-y-2">
                   {sources.map((s) => (
-                    <li key={`${s.id}-${s.chunk_index}`} className="rounded-lg border p-3 text-sm dark:border-neutral-800">
+                    <li
+                      key={`${s.id}-${s.chunk_index}`}
+                      className="rounded-lg border border-white/10 bg-white/5 p-3 text-sm"
+                    >
                       <details>
                         <summary className="cursor-pointer">
-                          [{s.title ?? "doc"}#{s.chunk_index}] • similarity {s.similarity.toFixed(3)}
+                          [{s.title ?? "doc"}#{s.chunk_index}] • similarity{" "}
+                          {s.similarity.toFixed(3)}
                         </summary>
-                        <p className="mt-2 opacity-90">{s.text.slice(0, 500)}{s.text.length > 500 ? "…" : ""}</p>
+                        <p className="mt-2 text-white/80">
+                          {s.text.slice(0, 500)}
+                          {s.text.length > 500 ? "…" : ""}
+                        </p>
                       </details>
                     </li>
                   ))}
@@ -183,59 +213,56 @@ export default function Home() {
         )}
 
         {/* Error */}
-        {msg && !answer && (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{msg}</p>
-        )}
+        {msg && !answer && <p className="mt-3 text-sm text-red-400">{msg}</p>}
       </section>
 
       {/* Upload Card */}
-      <section className="rounded-2xl border bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-5 md:p-6 shadow-[0_0_40px_rgba(0,0,0,0.15)]">
         <h2 className="text-lg font-medium mb-3">Upload & re-ingest</h2>
+
         <div className="grid gap-3">
           <input
             type="file"
             accept=".txt,.md,.pdf"
             onChange={(e) => pick(e.target.files?.[0] || undefined)}
-            className="block w-full text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-black file:px-4 file:py-2 file:text-white hover:file:opacity-90 dark:file:bg-white dark:file:text-black"
+            className="block w-full text-sm file:mr-4 file:rounded-xl file:border file:border-white/10 file:bg-white/5 file:px-4 file:py-2 file:text-white hover:file:bg-white/10"
           />
           {file && (
-            <div className="text-sm text-gray-600 dark:text-neutral-400">
-              Selected: <strong>{file.name}</strong> — {fmtMB(file.size)}
+            <div className="text-sm text-white/70">
+              Selected: <strong className="text-white/90">{file.name}</strong> —{" "}
+              {fmtMB(file.size)}
             </div>
           )}
           <div className="grid gap-3 md:grid-cols-2">
             <input
-              className="rounded-lg border px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 placeholder:text-white/40"
               placeholder="Optional title override"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
             <input
-              className="rounded-lg border px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 placeholder:text-white/40"
               placeholder="Optional doc_id (for filtering)"
               value={docId}
               onChange={(e) => setDocId(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
-              className="inline-flex items-center rounded-lg bg-black px-4 py-2 text-white hover:opacity-90 disabled:opacity-50 dark:bg-white dark:text-black"
+              className="inline-flex items-center rounded-xl px-5 py-3 font-medium text-white button-glow
+                     bg-gradient-to-r from-accent-purple to-accent-blue hover:opacity-95 disabled:opacity-50"
               onClick={upload}
               disabled={!file}
             >
               Upload & Ingest
             </button>
-            <p className="text-xs text-gray-500 dark:text-neutral-500">
+            <p className="text-xs text-white/60">
               Max file size: {fmtMB(MAX_FILE_BYTES)} • Supports .txt, .md, .pdf
             </p>
           </div>
-          {msg && <p className="text-sm">{msg}</p>}
+          {msg && <p className="text-sm text-white/80">{msg}</p>}
         </div>
       </section>
-
-      <footer className="py-6 text-center text-xs text-gray-500 dark:text-neutral-500">
-        Built by <b>Nico Belazaras</b> with Next.js · Supabase (pgvector) · OpenAI
-      </footer>
     </main>
   );
 }
