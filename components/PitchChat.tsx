@@ -43,19 +43,17 @@ export default function PitchChat() {
   }
 
   const seedPrompts = [
-    "What would a 4-week RAG pilot look like?",
+    "What would a 4-week headless ecommerce sprint look like?",
     "How do you scope a headless Shopify build?",
-    "Typical timelines & rates?",
-    "Show a sample architecture outline.",
+    "Can you handle React Native work too?",
+    "Typical timelines and engagement models?",
   ];
 
   return (
     <div className="flex flex-col h-[80vh] bg-[#0B0B0C] text-white rounded-2xl border border-white/10 overflow-hidden">
       <header className="p-4 border-b border-white/10 flex items-center justify-between">
         <h1 className="font-semibold text-lg gradient-text">Hire Nico</h1>
-        <div className="text-xs text-white/60">
-          AI/RAG • Shopify • TypeScript
-        </div>
+        <div className="text-xs text-white/60">React • Node.js • Shopify</div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-6 space-y-4">

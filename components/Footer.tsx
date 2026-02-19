@@ -7,8 +7,6 @@ export default function Footer() {
         <div className="inline-flex items-center gap-2">
           <span>© {year} Nico Belazaras</span>
           <span className="h-1 w-1 rounded-full gradient-bg" />
-          <span>London</span>
-          <span className="h-1 w-1 rounded-full gradient-bg" />
           <a
             className="underline hover:text-white"
             href="mailto:belazaras@live.com"

@@ -3,15 +3,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const links = [
-  { href: "/", label: "About" },
+  { href: "/#work", label: "Work" },
+  { href: "/#services", label: "Services" },
   { href: "/rag", label: "RAG Demo" },
-  { href: "/studio", label: "Podcast Studio" },
+  { href: "/studio", label: "Podcast Studio Demo" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const syncHash = () => setHash(window.location.hash);
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => window.removeEventListener("hashchange", syncHash);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-white/70 backdrop-blur dark:bg-neutral-950/70">
@@ -27,7 +37,9 @@ export default function Navbar() {
         {/* Links */}
         <ul className="hidden gap-1 md:flex">
           {links.map((l) => {
-            const active = pathname === l.href;
+            const active = l.href.startsWith("/#")
+              ? pathname === "/" && hash === l.href.slice(1)
+              : pathname === l.href;
             return (
               <li key={l.href}>
                 <Link

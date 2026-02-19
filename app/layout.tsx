@@ -13,13 +13,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Nico Belazaras — Full-Stack + AI Engineer",
+  title: "Nico Belazaras — Senior Full-Stack Engineer",
   description:
-    "Senior engineer specializing in full-stack, Shopify, and RAG/AI pipelines. Portfolio, demos, and contact.",
+    "Senior full-stack engineer specializing in React, Node.js, headless Shopify, and data-intensive product systems.",
   openGraph: {
-    title: "Nico Belazaras — Full-Stack + AI Engineer",
-    description: "RAG demo, Podcast→Social Studio, and case studies.",
-    images: ["/og.png"],
+    title: "Nico Belazaras — Senior Full-Stack Engineer",
+    description: "Headless ecommerce, data platforms, AI systems, and selected case studies.",
+    images: ["/nico.jpg"],
   },
   metadataBase: new URL("https://belazaras.vercel.app"),
 };
@@ -44,12 +44,8 @@ export default function RootLayout({
               "@type": "Person",
               name: "Nico Belazaras",
               jobTitle: "Senior Full-Stack Engineer",
-              url: "https://your-domain.com",
+              url: "https://belazaras.vercel.app",
               email: "mailto:belazaras@live.com",
-              address: {
-                "@type": "PostalAddress",
-                addressLocality: "London, UK",
-              },
               sameAs: ["https://www.linkedin.com/in/belazaras/"],
             }),
           }}
